@@ -31,13 +31,12 @@ button.g{background:transparent;color:var(--fg);border:1.5px solid var(--line);f
  <div id="res">
   <div><div class="k">선택한 주소</div><div id="road"></div><div class="k" id="jibun"></div></div>
   <input id="detail" placeholder="상세주소 (동/호수, 선택)" autocomplete="off">
-  <button id="copy" type="button">이 주소 복사하기</button>
+  <button id="copy" type="button">이 주소 입력하기 (복사도 함)</button>
   <div id="ok" role="status"></div>
   <button class="g" id="again" type="button">다시 검색</button>
  </div>
 </div>
 <textarea id="full" aria-hidden="true" tabindex="-1"></textarea>
-<script src="https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script>
 var $=function(s){return document.querySelector(s)},base='';
 var q=new URLSearchParams(location.search).get('q')||'';
@@ -56,13 +55,17 @@ function start(){
  }).embed($('#box'),q?{q:q}:undefined);
 }
 function full(){return (base+' '+$('#detail').value.trim()).trim()}
+function send(t){var sent=false;try{if(window.opener&&!window.opener.closed){window.opener.postMessage({type:'juso-address',addr:t},'*');sent=true}}catch(e){}return sent}
 $('#copy').onclick=function(){
- var t=full(),done=function(){var o=$('#ok');o.textContent='복사했습니다 · '+t;o.classList.add('on')};
+ var t=full(),sent=send(t),done=function(){var o=$('#ok');o.textContent=(sent?'사이트로 보냈고 복사도 했습니다 · ':'복사했습니다 · ')+t;o.classList.add('on');if(sent)setTimeout(function(){try{window.close()}catch(e){}},900)};
  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,fb)}else fb();
  function fb(){var a=$('#full');a.value=t;a.style.height='auto';a.select();try{document.execCommand('copy');done()}catch(e){$('#ok').textContent='길게 눌러 복사하세요: '+t;$('#ok').classList.add('on')}}
 };
 $('#again').onclick=start;
-if(window.kakao&&kakao.Postcode)start();else $('#box').textContent='주소 검색을 불러오지 못했습니다. 인터넷 연결을 확인하세요.';
+function fail(){var b=$('#box');b.style.height='auto';b.style.padding='16px';b.innerHTML='<b>주소 검색 창을 불러오지 못했습니다.</b><ol style="line-height:1.7;padding-left:20px"><li>Claude 미리보기가 아니라 <b>크롬·사파리 같은 일반 브라우저</b>에서 열었는지 확인하세요.</li><li>광고 차단 프로그램이 있으면 이 페이지에서 끄세요.</li><li>회사·학교 와이파이면 휴대폰 데이터로 열어 보세요.</li></ol><button type="button" onclick="location.reload()">다시 시도</button> <a href="https://map.kakao.com/" target="_blank" rel="noopener" style="margin-left:8px">카카오맵에서 직접 찾기</a>'}
+var sc=document.createElement('script');sc.src='https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+sc.onload=function(){if(window.kakao&&kakao.Postcode)start();else fail()};sc.onerror=fail;document.head.appendChild(sc);
+setTimeout(function(){if(!(window.kakao&&kakao.Postcode)&&!$('#res').classList.contains('on')&&!$('#box').querySelector('iframe'))fail()},8000);
 </script>
 </body>
 </html>
