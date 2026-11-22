@@ -50,6 +50,13 @@ function start(){
    if(d.buildingName&&d.apartment==='Y')extra+=(extra?', ':'')+d.buildingName;
    base=(d.roadAddress||d.jibunAddress)+(extra?' ('+extra+')':'');
    $('#road').textContent=base;$('#jibun').textContent=d.jibunAddress?'지번 '+d.jibunAddress:'';
+   if(send(base)){
+    try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(base)}catch(e){}
+    $('#box').style.display='none';$('#res').classList.add('on');
+    ['detail','copy','again'].forEach(function(i){$('#'+i).style.display='none'});
+    var o=$('#ok');o.textContent='사이트에 입력했습니다. 상세주소(동·호수)는 사이트에서 이어서 적어 주세요.';o.classList.add('on');
+    setTimeout(function(){try{window.close()}catch(e){}},700);return;
+   }
    $('#box').style.display='none';$('#res').classList.add('on');$('#detail').focus();
   }
  }).embed($('#box'),q?{q:q}:undefined);
